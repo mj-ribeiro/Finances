@@ -184,7 +184,7 @@ abline(v=med)
 
 crise = matrix(nrow = length(cmts))
 
-crise = ifelse(cm2<med, 1, 0)  # definition of crise
+crise = ifelse(cm2<lim, 1, 0)  # definition of crise
 
 View(crise)
 sum((crise==1)*1)
@@ -192,6 +192,8 @@ sum((crise==1)*1)
 
 pos = which(crise==1)   # pegar a posição onde crise== 1
 
+plot(cm2, type='l')
+abline(h=lim)
 
 #crise[(13-12):13] = 1   # gambiarras haha
 
@@ -240,13 +242,62 @@ df$date = NULL
 
 #---- Algorithm
 
+# see: http://topepo.github.io/caret/train-models-by-tag.html#neural-network
+
+
+# as classes são desbalanceadas
+# logo vou retirar uma parcela da amostra
+
+# see: https://www.analyticsvidhya.com/blog/2016/03/practical-guide-deal-imbalanced-classification-problems/
+
+install.packages("ROSE")
+library(ROSE)
+
+d = ovun.sample(crise ~ ., data = df, method = "under",N = 60, seed=1)$data
+prop.table(table(d$crise))
+
+
+library(caret)   # library to cross validation 
+
+# Neural net
+
+control_train = trainControl(method = 'cv', number = 10)    # ten fold
+model4 = train(as.factor(crise) ~., data=d, trControl = control_train, method='nnet') 
+
+model4
+
+confusionMatrix(model4)
+
+
+# Multilogit
+
+control_train = trainControl(method = 'repeatedcv', number = 10, repeats = 2)    # ten fold
+model3 = train(as.factor(crise) ~., data=d, trControl = control_train, method='glm', family='binomial') 
+
+model3
+confusionMatrix(model3)
+
+
+# SVM
+
+control_train = trainControl(method = 'cv', number = 10)    # ten fold
+model5 = train(as.factor(crise) ~., data=d, trControl = control_train, method='svmRadial') 
+
+model5
+confusionMatrix(model5)
 
 
 
 
+# KNN
+
+control_train = trainControl(method = 'cv', number = 10)    # ten fold
+model6 = train(as.factor(crise) ~., data=d, trControl = control_train, method='knn') 
+
+model6
 
 
-
+confusionMatrix(model6)
 
 
 
