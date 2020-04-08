@@ -93,16 +93,3 @@ t.test(es)
 
 
 
-
-
-
-
-
-sample(ret, 10)
-
-
-
-
-
-
-
