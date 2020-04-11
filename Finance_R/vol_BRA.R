@@ -75,13 +75,27 @@ cb = xts(cb, order.by = data)
 rownames(cb) = data    # colocar a data como índice
 
 
+
+# cdi
+
+cdi = gbcbd_get_series(4391, first.date= '2000-01-01',  
+                       format.data = "long", be.quiet = FALSE)[ ,1:2]
+
+data = cdi$ref.date
+cdi[,1]= NULL
+cdi = xts(cdi, order.by = data)
+
+rownames(cdi) = data    # colocar a data como índice
+
+
+
+
 # PTAX
 
 ptax = getSymbols('BRL=X', src='yahoo', 
                   from= '2000-01-01', 
                   periodicity = "monthly",
                   auto.assign = F)[,4]
-
 
 #-------- Descriptive stats
 
@@ -114,21 +128,23 @@ ret = ret[is.na(ret)==F]
 
 #ret = matrix(ret)
 
+6/144
+v = c(1, 3, 144, 5, 6)
+CMAX(2, 4, v)
 
 #------ Using CMAX function
 
 
-cm2 = CMAX(24, (length(ibov)-24), ibov)
+cm2 = CMAX(23, (length(ibov)-24), ibov)
+
 
 hist(cm2, breaks = 35, col='lightgreen', 
      main='Histograma para o CMAX diário \n com 24 janelas')
 
+ 
 
-basicStats(cm2)
-
-lim = mean(cm2)-2*sd(cm2)
-
-
+#lim = mean(cm2)-2*sd(cm2)
+lim = 0.7
 
 cm2[cm2<lim]
 sum((cm2<lim)*1)   # count 
@@ -146,19 +162,22 @@ data1 = data[25:length(ibov)]
 cmts = xts(x=cm2, order.by = data1) 
 
 
-
 # Plot CMAX - 24
 
 library(zoo)
 
 windows()
 par(mfrow=c(1,1))
-plot(as.zoo(cmts), main = 'CMAX- W24', ylim=c(0.5, 1), type='l', ylab='CMAX', xlab='Ano')
-abline(h=0.8)
+plot(as.zoo(cmts), main = 'CMAX- W24', ylim=c(0.5, 1),
+     type='l', ylab='CMAX', xlab='Ano')
+#xaxt='n'
+#axis(1, at=seq(20, 200, 10), labels=seq(2002, 2020, 1))
+abline(h=lim)
 text(as.Date('2008-10-10'), y=0.55, labels = 'Crise \n de 2008', cex=0.8) 
 text(as.Date('2020-03-10'), y=0.52, labels = 'Crise \n do COVID-19', cex=0.8) 
 text(as.Date('2000-03-10'), y=0.6, labels = 'Bolha da \n internet', cex=0.8) 
 text(as.Date('2001-12-9'), y=0.7, labels = '11 de setembro', cex=0.8) 
+
 
 par(mfrow=c(1,2))
 plot(ret)
@@ -186,21 +205,48 @@ crise = matrix(nrow = length(cmts))
 
 crise = ifelse(cm2<lim, 1, 0)  # definition of crise
 
+
 View(crise)
 sum((crise==1)*1)
 
 
-pos = which(crise==1)   # pegar a posição onde crise== 1
+crise = xts(crise, order.by = data1)
+plot(crise)
 
-plot(cm2, type='l')
-abline(h=lim)
+
+pos = which(crise==1)   # pegar a posição onde crise== 1
+pos
+
 
 #crise[(13-12):13] = 1   # gambiarras haha
 
 
-for (c in 6:length(pos)){
+for (c in 7:length(pos)){
   crise[(pos[c]-12):pos[c]] = 1
 }
+pos
+which(pos==170)
+
+crise[(pos[9]+1):21]=2
+crise[(pos[10]+1):(pos[10]+12)]=2
+crise[(pos[11]+1):(pos[11]+12)]=2
+crise[(pos[12]+1):(pos[12]+12)]=2
+crise[(pos[13]+1):(pos[13]+12)]=2
+crise[(pos[14]+1):(pos[14]+12)]=2
+crise[(pos[15]+1):(pos[15]+12)]=2
+crise[(pos[16]+1):(pos[16]+12)]=2
+crise[(pos[17]+1):(pos[17]+12)]=2
+crise[(pos[18]+1):(pos[18]+12)]=2
+crise[(pos[19]+1):(pos[19]+12)]=2
+crise[pos[20]] = 2
+
+
+
+prop.table(table(crise))
+
+
+
+
 
 
 
@@ -212,6 +258,9 @@ text(locator(n=1),
                  digits=2)*100,"%"))
 text(locator(n=1),
      paste(round(prop.table(table(crise))[2],
+                 digits=2)*100,"%"))
+text(locator(n=1),
+     paste(round(prop.table(table(crise))[3],
                  digits=2)*100,"%"))
 
 
@@ -228,11 +277,12 @@ vix = vix[data]
 data = index(cb)
 vix = vix[data]
 crise = crise[data] 
-  
+cdi = cdi[data]
+
 
 # transform data in data frame
 
-df = data.frame(vix, cb, crise)
+df = data.frame(vix, cb, crise, cdi)
 
 df = data.frame(date=index(index(cb)), coredata(df))
 
@@ -250,19 +300,43 @@ df$date = NULL
 
 # see: https://www.analyticsvidhya.com/blog/2016/03/practical-guide-deal-imbalanced-classification-problems/
 
-install.packages("ROSE")
-library(ROSE)
+#library(imbalance)
 
-d = ovun.sample(crise ~ ., data = df, method = "under",N = 60, seed=1)$data
-prop.table(table(d$crise))
+#d = mwmote(df, numInstances = 500, classAttr = "x")
 
+
+
+library(neuralnet)
+d = df[1:192, ]
+d_test = df[193:218, ]
+
+NN = neuralnet(x~., d, hidden = 3, linear.output = T)
+plot (NN)
+prev = predict(NN, d_test)
+prev = ifelse(prev>0.5, 1,0)
+
+c = table(d_test[,3], prev)
+confusionMatrix(c)
+
+which(vix==13.54)
+df
+
+
+
+# CV in TS https://rpubs.com/crossxwill/time-series-cv
 
 library(caret)   # library to cross validation 
 
-# Neural net
 
-control_train = trainControl(method = 'cv', number = 10)    # ten fold
-model4 = train(as.factor(crise) ~., data=d, trControl = control_train, method='nnet') 
+# Neural net
+control_train =trainControl(method = "timeslice",
+                            initialWindow = 36,
+                            horizon = 12,
+                            fixedWindow = T,
+                            allowParallel = T)
+                            
+model4 = train(as.factor(x) ~., data=df, trControl = control_train, method='nnet', threshold = 0.3)
+               
 
 model4
 
@@ -272,7 +346,7 @@ confusionMatrix(model4)
 # Multilogit
 
 control_train = trainControl(method = 'repeatedcv', number = 10, repeats = 2)    # ten fold
-model3 = train(as.factor(crise) ~., data=d, trControl = control_train, method='glm', family='binomial') 
+model3 = train(as.factor(x) ~., data=df, trControl = control_train, method='glm', family='binomial') 
 
 model3
 confusionMatrix(model3)
@@ -281,7 +355,7 @@ confusionMatrix(model3)
 # SVM
 
 control_train = trainControl(method = 'cv', number = 10)    # ten fold
-model5 = train(as.factor(crise) ~., data=d, trControl = control_train, method='svmRadial') 
+model5 = train(as.factor(x) ~., data=df, trControl = control_train, method='svmRadial') 
 
 model5
 confusionMatrix(model5)
@@ -292,7 +366,7 @@ confusionMatrix(model5)
 # KNN
 
 control_train = trainControl(method = 'cv', number = 10)    # ten fold
-model6 = train(as.factor(crise) ~., data=d, trControl = control_train, method='knn') 
+model6 = train(as.factor(x) ~., data=df, trControl = control_train, method='knn') 
 
 model6
 
