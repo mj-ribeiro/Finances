@@ -1,5 +1,5 @@
 #**************************************************************************************
-#                      PCA with risk aversion index
+#                       PCA with risk aversion index
 #****************************************************************************************
 
 setwd("D:/Git projects/Finance/Finance_R")
@@ -120,7 +120,7 @@ know_data = function(z){
 
 t = c()
 for (i in ativos) {
-  print(know_data(i))
+#  print(know_data(i))
   t[i] = know_data(i)
 }
 
@@ -210,6 +210,7 @@ ret = xts(ret, order.by = data)
 pca = xts(pca, order.by = data)
 
 
+View(assets)
 # Plot first component
 
 plot(pca$V1, type='l')
@@ -220,6 +221,7 @@ plot(pca$V1, type='l')
 saveRDS(pca, 'pca.rds')
 
 
-
-
-
+  
+  
+  
+  

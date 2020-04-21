@@ -112,6 +112,9 @@ cdi = xts(cdi, order.by = data)
 rownames(cdi) = data    # colocar a data como índice
 
 
+plot(cdi)
+
+
 
 
 # PTAX
