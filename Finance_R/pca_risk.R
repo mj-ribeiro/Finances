@@ -149,7 +149,7 @@ sort_names[1:23]  # assets that date begin in 2000-01-01
 
 
 assets = sort_names[1:23]
-
+assets
 
 df = data.frame(lapply(assets, get_data))
 
@@ -174,7 +174,7 @@ df = df[-nl,]
 nl = sum((df[,1]>0)*1)
 
 
-# calculating retunrs
+# calculating returs
 
 
 
@@ -189,14 +189,13 @@ for(i in 1:length(assets)){
 colnames(ret) = assets
 
 
-#------------- Apllying PCA algorithm
+#------------- Aplying PCA algorithm
 
 
 library(caret)  
 
 pca = preProcess(x= ret, method = 'pca', pcaComp = 1)
 pca = predict(pca, ret)
-
 
 
 
