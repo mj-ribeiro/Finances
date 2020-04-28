@@ -94,11 +94,65 @@ for(i in 1:x){
   
 }
 
-res = markowitz(20000)
+res = markowitz(50000)
 res = t(res)
+
+row.names(res) = assets
+
 
 res[which.max(res), ]
 res[which.min(res), ]
 
 
 
+#------- Using Rsolnp
+
+
+library('Rsolnp')
+
+markowitz2 = function(w){
+  v = t(w)%*%cov(ret)%*%w 
+  return(v)  
+}
+
+eq = function(w){
+  sum(w)
+}
+
+
+w = runif(length(assets), 0, 1)
+w = w/sum(w)
+
+res = solnp(w,      #starting values 
+      markowitz2,   #function to optimise
+      eqfun=eq,     #equality function 
+      eqB=1,        #the equality constraint. Obviously is one
+      LB=c(rep(0, length(assets))), #lower bound for parameters i.e. greater than zero
+      UB=c(rep(1, length(assets)))) #upper bound for parameters i.e less than one
+
+
+v1 = res$values[3]
+
+sum(res$pars)
+
+pes = res$pars
+
+
+for(i in 1:length(assets)){
+  cat('\033[1;033m')
+  cat(assets[i],'-------', round(pes[i], 5))
+  cat('\n')
+}
+
+
+v1 = res$values[length(res$values)]
+
+cat('A variância do modelo é dada por:', round(v1,6))
+
+
+
+res1 = data.frame(assets, pes)
+View(res1)
+
+
+print(res1)
