@@ -74,16 +74,24 @@ colnames(ret) = assets
 
 #*********** Algorithm
 
-
+for (j in 1:length(assets)){
+  mean_ret[j] = mean(ret[ ,j])
+}
+  
+  
 markowitz = function(x){
-v = c()
-w = matrix(nrow = x, ncol = length(assets))
+  v = c()
+  e = c()
+  w = matrix(nrow = x, ncol = length(assets))
 for(i in 1:x){
   w[i, ] = runif(length(assets), 0, 1)
   w[i, ] = w[i, ]/sum(w[i, ])
   v[i] = t(w[i, ])%*%cov(ret)%*%w[i, ] 
+  e[i] = w[i, ]%*%mean_ret
 }
+  plot(v, e, col='blue', xlab='Variance', ylab='Expected return', pch=20)
   cat('A variância mínima é:', round(min(v), 4))
+  
   cat('\n')
   pes = w[(which.min(v)), ]
   pes = t(pes)
@@ -94,7 +102,7 @@ for(i in 1:x){
   
 }
 
-res = markowitz(50000)
+res = markowitz(10000)
 res = t(res)
 
 row.names(res) = assets
@@ -103,12 +111,14 @@ row.names(res) = assets
 res[which.max(res), ]
 res[which.min(res), ]
 
+#plot(rnorm(10), rnorm(10), pch=20, las=1, type='p', col='red', bty='l')
 
 
-#------- Using Rsolnp
+#------- Using Rsolnp library
 
 
 library('Rsolnp')
+
 
 markowitz2 = function(w){
   v = t(w)%*%cov(ret)%*%w 
@@ -139,7 +149,7 @@ pes = res$pars
 
 
 for(i in 1:length(assets)){
-  cat('\033[1;033m')
+  cat('\033[1;035m')
   cat(assets[i],'-------', round(pes[i], 5))
   cat('\n')
 }
@@ -156,3 +166,5 @@ View(res1)
 
 
 print(res1)
+
+
