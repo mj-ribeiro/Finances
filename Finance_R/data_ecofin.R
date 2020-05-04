@@ -45,7 +45,8 @@ library(GetBCBData)
 # Get data
 
 ibov = getSymbols('^BVSP', src='yahoo', 
-                  from= '1995-01-01', 
+                  from= '1999-01-01', 
+                  to = '2020-04-01',
                   periodicity = "monthly",    # IBOV mensal
                   auto.assign = F)[,4]
 
@@ -57,7 +58,8 @@ ibov = ibov[is.na(ibov)==F]
 
 vix = getSymbols('^VIX', src='yahoo', 
                  periodicity = "monthly",
-                 from= '1995-01-01', 
+                 from= '2000-01-01', 
+                 to = '2020-04-01',
                  auto.assign = F)[,4]
 
 colnames(vix) = 'vix'
@@ -67,7 +69,8 @@ colnames(vix) = 'vix'
 
 oil = getSymbols('CL=F', src='yahoo', 
                  periodicity = "monthly",
-                 from= '1995-01-01', 
+                 from= '2000-01-01', 
+                 to = '2020-04-01',
                  auto.assign = F)[,4]
 
 colnames(oil) = 'oil'
@@ -78,7 +81,8 @@ colnames(oil) = 'oil'
 
 gold = getSymbols('GC=F', src='yahoo', 
                  periodicity = "monthly",
-                 from= '1995-01-01', 
+                 from= '2000-01-01', 
+                 to = '2020-04-01',
                  auto.assign = F)[,4]
 
 colnames(gold) = 'gold'
@@ -89,7 +93,7 @@ colnames(gold) = 'gold'
 # 11768 - Índice da taxa de câmbio real (INPC)
 
 
-cb = gbcbd_get_series(11768, first.date= '1995-01-01',  
+cb = gbcbd_get_series(11768, first.date= '2000-01-01', last.date = '2020-04-01',  
                       format.data = "long", be.quiet = FALSE)[ ,1:2]
 
 data = cb$ref.date
@@ -98,11 +102,11 @@ cb = xts(cb, order.by = data)
 
 rownames(cb) = data    # colocar a data como índice
 
-
+colnames(cb) = 'cb'
 
 # cdi
 
-cdi = gbcbd_get_series(4391, first.date= '1995-01-01',  
+cdi = gbcbd_get_series(4391, first.date= '2000-01-01', last.date = '2020-04-01',  
                        format.data = "long", be.quiet = FALSE)[ ,1:2]
 
 data = cdi$ref.date
@@ -111,7 +115,7 @@ cdi = xts(cdi, order.by = data)
 
 rownames(cdi) = data    # colocar a data como índice
 
-
+colnames(cdi) = 'cdi'
 plot(cdi)
 
 
@@ -119,19 +123,18 @@ plot(cdi)
 
 # PTAX
 
-ptax = getSymbols('BRL=X', src='yahoo', 
-                  from= '2000-01-01', 
-                  periodicity = "monthly",
-                  auto.assign = F)[,4]
+#ptax = getSymbols('BRL=X', src='yahoo', 
+#                  from= '2000-01-01', 
+#                  periodicity = "monthly",
+#                 auto.assign = F)[,4]
+
 
 #-------- Descriptive stats
 
 
-df = data.frame(cb[index(oil)], ibov[index(oil)], vix[index(oil)], gold[index(oil)], oil[index(oil)])
+df2 = data.frame(cb[index(oil)], ibov[index(oil)], vix[index(oil)], gold[index(oil)], oil)
 
-apply(df[,1:3], 2, basicStats)
-
-
+apply(df2[,1:3], 2, basicStats)
 
 
 #plots
@@ -151,7 +154,7 @@ ret = diff(log(ibov))
 basicStats(ret)
 
 ret = ret[is.na(ret)==F]
-
+colnames(ret) = 'ret'
 
 #ret = matrix(ret)
 
@@ -159,7 +162,7 @@ ret = ret[is.na(ret)==F]
 #------ Using CMAX function
 
 
-cm2 = CMAX(6,(length(ibov)-6), ibov )
+cm2 = CMAX(12,(length(ibov)-12), ibov )
 
 var1 = quantile(cm2, 0.05)
 
@@ -178,7 +181,7 @@ sum((cm2<lim)*1)   # count
 # get the data of ibov
 
 data = index(ibov)
-data1 = data[7:length(ibov)]
+data1 = data[13:length(ibov)]
 
 
 
@@ -251,88 +254,22 @@ data = index(cb)
 vix = vix[data]
 crise = crise[data] 
 cdi = cdi[data]
-
+ret = ret[data]
 
 # transform data in data frame
 
-df = data.frame(vix, cb, crise, cdi)
+df = data.frame(ret, vix, cb, crise, cdi)
 
 df = data.frame(date=index(index(cb)), coredata(df))
 
 df$date = NULL
 
 
+### save in rds file
 
-#---- Algorithm
-
-# see: http://topepo.github.io/caret/train-models-by-tag.html#neural-network
-
-
-# as classes são desbalanceadas
-# logo vou retirar uma parcela da amostra
-
-# see: https://www.analyticsvidhya.com/blog/2016/03/practical-guide-deal-imbalanced-classification-problems/
-
-#library(imbalance)
-
-#d = mwmote(df, numInstances = 500, classAttr = "x")
+saveRDS(df, 'df.rds')
 
 
-
-
-# CV in TS https://rpubs.com/crossxwill/time-series-cv
-
-library(caret)   # library to cross validation 
-
-
-# Neural net
-control_train =trainControl(method = "timeslice",
-                            initialWindow = 36,
-                            horizon = 12,
-                            fixedWindow = T,
-                            allowParallel = T)
-                            
-model4 = train(as.factor(crise) ~., data=df, trControl = control_train, 
-               method='nnet', threshold = 0.3)
-
-
-model4
-
-confusionMatrix(model4)
-
-
-
-# Multilogit
-
-control_train = trainControl(method = 'repeatedcv', number = 10, repeats = 2)    # ten fold
-model3 = train(as.factor(crise) ~., data=df, trControl = control_train, method='multinom', family='binomial') 
-
-model3
-confusionMatrix(model3)
-
-
-# SVM
-
-control_train = trainControl(method = 'cv', number = 10)    # ten fold
-model5 = train(as.factor(crise) ~., data=df, trControl = control_train, method='svmRadial') 
-
-model5
-confusionMatrix(model5)
-
-
-
-
-# KNN
-
-
-control_train = trainControl(method = 'cv', number = 10)    # ten fold
-model6 = train(as.factor(crise) ~., data=df, trControl = control_train, 
-               method='knn') 
-
-model6
-
-
-confusionMatrix(model6)
 
 
 

@@ -15,7 +15,7 @@ kappa = 1/(1- eta)
 i = 7
 r = 27
 gamma1 = gamma(1 - ( (theta*(1-rho)) **(-1) )   * (1 - eta)**(-1)  )    
-phi = c(0.138, 0.174)
+phi = c(0.138, 0.174, 0.136, 0.1, 0.051, 0.084, 0.168)
 
 
 
@@ -88,7 +88,6 @@ H_trf = function(x1){
 }
 
 
-H_tr = runif(r)
 
 
 
@@ -180,6 +179,8 @@ W_t[1] = NULL
 
 W_t = as.matrix(W_t)
 
+#col = colnames(W_t)
+
 
 p_t = read_excel("p_t.xlsx")
 p_t[1] = NULL
@@ -208,22 +209,22 @@ obj = function(x1){
   w_til = w_tilf(x1)
   w_r = w_rf()
   p_ir = p_irf()
-  #H_tr = H_trf(x1)
+  H_tr = H_trf(x1)
   W = Wf(x1)
   
     
   f1 = matrix(0, i, r)
-  f2 = matrix(0, i, r)    
+  #f2 = matrix(0, i, r)    
   
   for (c in 1:i){
     for (j in 1:r){
-      f1[c, j] = ( (W[c, j] - W_t[c, j]) / W_t[c, j] ) ** 2
-      f2[c, j] = ( (p_ir[c, j] - p_t[c, j])  /  p_t[c, j] ) ** 2
+      f1[c, j] = ( (W[c, j] - W_t[c, j]) / W_t[c, j] ) ** 2 + ( (p_ir[c, j] - p_t[c, j])  /  p_t[c, j] ) ** 2
+      #f2[c, j] = ( (p_ir[c, j] - p_t[c, j])  /  p_t[c, j] ) ** 2
 }
 }
-    d1 = sum(f1)
-    d2 = sum(f2)
-    D = d1 + d2
+    #d1 = sum(f1)
+    #d2 = sum(f2)
+    D = sum(f1)
     
     return(D)
   
@@ -250,7 +251,6 @@ x1==res$par
 
 res$par
 res$value
-
 
 
 #x1 = array( c(tau_w, tau_h, w), dim = c(i, r, 3))
