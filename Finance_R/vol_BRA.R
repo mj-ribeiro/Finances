@@ -163,7 +163,7 @@ cm2 = CMAX(6,(length(ibov)-6), ibov )
 
 var1 = quantile(cm2, 0.05)
 
-hist(cm2, breaks = 35, col='lightgreen', 
+hist(-cm2, breaks = 15, col='lightgreen', 
      probability = T,
      main='Histograma para o CMAX diário \n com 24 janelas')
 abline(v=var1)
