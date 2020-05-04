@@ -2,6 +2,7 @@
 #                               Hsieh Model
 #======================================================================================
 
+setwd("D:/Git projects/Finance/Finance_R")
 
 #------------------ defining parameters
 
@@ -11,8 +12,8 @@ varphi = 0.25
 theta = 3.44
 rho = 0.19
 kappa = 1/(1- eta)
-i = 2
-r = 4
+i = 7
+r = 27
 gamma1 = gamma(1 - ( (theta*(1-rho)) **(-1) )   * (1 - eta)**(-1)  )    
 phi = c(0.138, 0.174)
 
@@ -59,7 +60,6 @@ tau_h = runif(i*r, -1, 1)
 
 x1 = array( c(tau_w, tau_h, w), dim = c(i, r, 3))
 
-#x1 = np.array( [tau_w, tau_h, w] )
 
 
 H_trf = function(x1){
@@ -87,7 +87,8 @@ H_trf = function(x1){
   return (H_tr)
 }
 
-H_trf(x1)
+
+H_tr = runif(r)
 
 
 
@@ -106,14 +107,12 @@ w_tilf = function(x1){
   return (w_til) 
 }
 
-H_tr = runif(4)
-
-
 
 
 
 
 #--------------------------- w_r
+
 
 w_til = w_tilf(x1)
 
@@ -166,18 +165,26 @@ Wf = function(x1){
 
 
 
-
 #--------- Simulated data 
 
+#W_t = rbind(c(0.1, 0.42, 0.33, 0.12), c(0.99, 0.22, 0.154, 0.654))
 
-
-W_t = rbind(c(0.1, 0.42, 0.33, 0.12), c(0.99, 0.22, 0.154, 0.654))
-
-
-p_t = rbind(c(0.122, 0.12, 0.132, 0.109), c(0.212, 0.453, 0.3524, 0.114))
+#p_t = rbind(c(0.122, 0.12, 0.132, 0.109), c(0.212, 0.453, 0.3524, 0.114))
 
 
 
+library(readxl)
+
+W_t = read_excel("W_t.xlsx")
+W_t[1] = NULL
+
+W_t = as.matrix(W_t)
+
+
+p_t = read_excel("p_t.xlsx")
+p_t[1] = NULL
+
+p_t = as.matrix(p_t)
 
 
 #--------------------- OBJECTIVE FUNCTION
@@ -187,19 +194,15 @@ p_ir = p_irf()
 
 
 
-w = runif(i*r, 0, 1)
-tau_w =  runif(i*r, -1, 1)
-tau_h = runif(i*r, -1, 1)
+w = matrix(runif(i*r, 0, 1), nrow = i, ncol = r)
+tau_w = matrix( runif(i*r, -1, 1), nrow = i, ncol = r)
+tau_h = matrix(runif(i*r, -1, 1), nrow = i, ncol = r)
 
-x1 = array( c(tau_w, tau_h, w), dim = c(i, r, 3))*0.5
-obj(x1)
-
-
-
+x1 = array( c(tau_w, tau_h, w), dim = c(i, r, 3))
 
 
 obj = function(x1){
-
+  x1 = array(x1, dim = c(i, r, 3))
   s = sf()
   h_til = h_tilf()
   w_til = w_tilf(x1)
@@ -230,19 +233,57 @@ obj(x1)
 
 
 
-
 #-------------------------- Solve
 
 library('Rsolnp')
-
 library('optimx')
 
 
-    
-
 
 res = optim(x1,      #starting values 
-            obj)   #function to optimise
+            obj,
+            method = 'Nelder-Mead')   #function to optimize
            
+
+
+x1==res$par
+
+res$par
+res$value
+
+
+
+#x1 = array( c(tau_w, tau_h, w), dim = c(i, r, 3))
+
+
+#--------  Bounds
+
+
+lb_tau_w = matrix( rep(-1000, i*r), nrow = i, ncol = r)
+lb_tau_h = matrix( rep(-1000, i*r), nrow = i, ncol = r)
+lb_w = matrix( rep(0, i*r), nrow = i, ncol = r)
+LB = array(c(lb_tau_h, lb_tau_w, lb_w), dim = c(i, r, 3))
+
+
+ub_tau_w = matrix( rep(1000, i*r), nrow = i, ncol = r)
+ub_tau_h = matrix( rep(1000, i*r), nrow = i, ncol = r)
+ub_w = matrix( rep(1000, i*r), nrow = i, ncol = r)
+UB = array(c(ub_tau_h, ub_tau_w, ub_w), dim = c(i, r, 3))
+
+
+
+
+
+
+res = solnp(x1,      #starting values 
+            obj,
+            UB=UB,
+            LB=LB)
+
+
+res$values
+
+res$pars
+
 
 
