@@ -11,7 +11,6 @@ library(ROSE)
 
 
 
-
 # see: http://topepo.github.io/caret/train-models-by-tag.html#neural-network
 # see: https://www.analyticsvidhya.com/blog/2016/03/practical-guide-deal-imbalanced-classification-problems/
 # CV in TS https://rpubs.com/crossxwill/time-series-cv
@@ -22,8 +21,33 @@ library(ROSE)
 pca = readRDS('pca.rds')
 df = readRDS('df.rds')
 
+pca2 = pca
+pca2 = pca2[-1]
+pca2 =pca2[-242]
 
-table(df$x)
+
+basicStats(pca2)
+
+df2 = df
+df2$pca = pca2
+
+df2$x = ifelse(df2$x==2, 0, df2$x )
+
+table(df2$x)
+
+
+#--- Rose library
+
+library(ROSE)
+
+df3 = ovun.sample(as.factor(x)~., data=df2, method="both", p=0.5,
+            subset=options("subset")$subset,
+            na.action=options("na.action")$na.action, seed=1)
+
+df3 = data.frame(df3$data)
+
+
+table(df3$x)
 
 
 #---- Control train
@@ -37,14 +61,20 @@ control_train = trainControl(method = 'repeatedcv', number = 10, repeats = 2)   
 #control_train =trainControl(method = "timeslice",initialWindow = 36, horizon = 12, fixedWindow = T,allowParallel = T)  
 
 
-model4 = train(as.factor(x) ~., data=df, trControl = control_train, 
+model4 = train(as.factor(x) ~., data=df3, trControl = control_train, 
                method='nnet', threshold = 0.3)
 
 
-model4
 
+model4 = train(as.factor(x) ~ vix + ret**2 + cdi + gold + oil, data=df3 , trControl = control_train, 
+               method='nnet', threshold = 0.6)
+ 
+model4
 confusionMatrix(model4)
 
+# 1 best: as.factor(x) ~ vix + ret**2 + cdi + gold + oil   (0.9087)
+# 2 best: as.factor(x) ~ vix + ret + cdi + gold + oil      (0.8921)
+# 3 best: as.factor(x) ~ vix + ret + cdi + gold + cb       (0.8423)
 
 #------ Multilogit
 

@@ -76,7 +76,6 @@ oil = getSymbols('CL=F', src='yahoo',
 colnames(oil) = 'oil'
 
 
-
 # Gold price
 
 gold = getSymbols('GC=F', src='yahoo', 
@@ -222,7 +221,7 @@ pos
 
 
 for(i in 1:length(pos)){
-  crise[(pos[i]-3):pos[i]] = 1
+  crise[(pos[i]-12):pos[i]] = 1
 }
 
 
@@ -251,18 +250,39 @@ vix = vix[data]
 
 
 data = index(cb)
+oil =oil[data]
 vix = vix[data]
 crise = crise[data] 
 cdi = cdi[data]
 ret = ret[data]
+gold = gold[data]
 
 # transform data in data frame
 
 df = data.frame(ret, vix, cb, crise, cdi)
 
-df = data.frame(date=index(index(cb)), coredata(df))
+df = merge(df, gold, by='row.names')
+d = df$Row.names
 
-df$date = NULL
+df$Row.names = NULL
+
+row.names(df) = d
+
+
+df = merge(df, oil, by='row.names')
+
+d = df$Row.names
+
+df$Row.names = NULL
+
+row.names(df) = d
+
+
+
+
+#df = data.frame(date=index(index(cb)), coredata(df))
+
+#df$date = NULL
 
 
 ### save in rds file

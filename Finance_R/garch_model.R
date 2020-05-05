@@ -145,7 +145,6 @@ spec
 
 #------- Model
 
-ugarchfit(variance.model = )
 
 spec1 = ugarchspec(variance.model=list(model="sGARCH", garchOrder=c(1,1)), 
                        mean.model=list(armaOrder=c(1,0), include.mean=TRUE),  
