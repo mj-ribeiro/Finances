@@ -73,6 +73,7 @@ colnames(ret) = assets
 
 
 #*********** Algorithm
+mean_ret = c()
 
 for (j in 1:length(assets)){
   mean_ret[j] = mean(ret[ ,j])
@@ -113,6 +114,7 @@ res[which.min(res), ]
 
 #plot(rnorm(10), rnorm(10), pch=20, las=1, type='p', col='red', bty='l')
 
+100*res
 
 #------- Using Rsolnp library
 

@@ -1,0 +1,10 @@
+name: Publish Document
+title:
+username:
+account: rpubs
+server: rpubs.com
+hostUrl: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/644896/5bc8316cf1124f52be613f68f8679ed3
+bundleId: https://api.rpubs.com/api/v1/document/644896/5bc8316cf1124f52be613f68f8679ed3
+url: http://rpubs.com/mj-ribeiro/644896/edit
+when: 1596231648.46467
