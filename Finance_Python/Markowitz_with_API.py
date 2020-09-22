@@ -75,7 +75,10 @@ def markowitz(x, assets):
     print('-='*20)
 
     
-   
+
+    
+
+
 
 
 
